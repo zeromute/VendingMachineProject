@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Vending Machine</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      text-align: center;
+      padding: 22px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 7px 0 0;
+      color: #cbd5e1;
+    }
+
+    main {
+      max-width: 1450px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .machine-panel {
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    .machine-panel h2 {
+      margin-top: 0;
+    }
+
+    .slots-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    .slots {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(125px, 1fr));
+      gap: 12px;
+      min-width: 1180px;
+    }
+
+    .slot {
+      border: 3px solid #d1d5db;
+      background: #f9fafb;
+      border-radius: 14px;
+      min-height: 190px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s ease;
+      position: relative;
+    }
+
+    .slot:hover {
+      border-color: #9ca3af;
+      transform: translateY(-2px);
+    }
+
+    .slot.selected {
+      border-color: #2563eb;
+      background: #eff6ff;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.15);
+    }
+
+    .slot-number {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: #111827;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .emoji {
+      font-size: 46px;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    .name {
+      font-weight: 700;
+      font-size: 15px;
+      min-height: 36px;
+    }
+
+    .price {
+      margin-top: 8px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .selected-info {
+      margin-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .selection-text {
+      font-size: 17px;
+    }
+
+    .selection-text strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 21px;
+    }
+
+    #payButton {
+      min-width: 210px;
+      padding: 15px 24px;
+      border: 0;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: not-allowed;
+      background: #d1d5db;
+      color: #6b7280;
+      transition: .2s ease;
+    }
+
+    #payButton.active {
+      cursor: pointer;
+      background: #16a34a;
+      color: white;
+      box-shadow: 0 0 20px rgba(22,163,74,.35);
+    }
+
+    #payButton.active:hover {
+      transform: translateY(-1px);
+      background: #15803d;
+    }
+
+    .status {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #f3f4f6;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(430px, 100%);
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .qr {
+      width: 210px;
+      height: 210px;
+      margin: 18px auto;
+      display: grid;
+      grid-template-columns: repeat(21, 1fr);
+      grid-template-rows: repeat(21, 1fr);
+      background: white;
+      border: 10px solid white;
+      box-shadow: 0 0 0 1px #d1d5db;
+    }
+
+    .qr span { background: white; }
+    .qr span.on { background: black; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+    }
+
+    .btn-confirm {
+      background: #16a34a;
+      color: white;
+    }
+
+    .lid-area {
+      margin-top: 28px;
+      background: white;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+
+    .lid-demo {
+      height: 180px;
+      border: 3px solid #111827;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      background: #f8fafc;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 18px;
+    }
+
+    .lid {
+      position: absolute;
+      top: 0;
+      width: 75%;
+      height: 60px;
+      background: #111827;
+      transform-origin: left center;
+      transition: .8s ease;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .lid.open {
+      transform: rotate(-42deg) translateY(-4px);
+    }
+
+    .retrieve {
+      color: #64748b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Smart Mini Vending Machine</h1>
+  <p>Select one item, pay, then retrieve it from the lid compartment.</p>
+</header>
+
+<main>
+  <section class="machine-panel">
+    <h2>Select Item</h2>
+
+    <div class="slots-wrapper">
+      <div class="slots" id="slots"></div>
+    </div>
+
+    <div class="selected-info">
+      <div class="selection-text">
+        Selected Item
+        <strong id="selectedText">None</strong>
+      </div>
+
+      <button id="payButton" disabled onclick="openPayment()">
+        PAY
+      </button>
+    </div>
+
+    <div class="status" id="status">
+      Please select one item.
+    </div>
+  </section>
+
+  <section class="lid-area">
+    <h2>Lid Simulation</h2>
+    <div class="lid-demo">
+      <div class="lid" id="lid"></div>
+      <div class="retrieve" id="retrieveText">Lid closed</div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="paymentModal">
+  <div class="modal-box">
+    <h2>QR Payment</h2>
+    <p id="paymentItem"></p>
+    <div class="qr" id="qr"></div>
+    <p style="color:#6b7280;font-size:13px;">
+      Prototype payment QR only.
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closePayment()">Cancel</button>
+      <button class="btn btn-confirm" onclick="confirmPayment()">Confirm Payment</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const products = [
+  { id:1, name:"Calculator", price:5.00, emoji:"🧮" },
+  { id:2, name:"USB Cable", price:4.00, emoji:"🔌" },
+  { id:3, name:"Pen Set", price:3.00, emoji:"🖊️" },
+  { id:4, name:"Notebook", price:6.00, emoji:"📓" },
+  { id:5, name:"Pencil Set", price:2.50, emoji:"✏️" },
+  { id:6, name:"Eraser", price:1.50, emoji:"🧽" },
+  { id:7, name:"Ruler", price:2.00, emoji:"📏" },
+  { id:8, name:"Highlighter", price:3.50, emoji:"🖍️" },
+  { id:9, name:"Sticky Notes", price:4.50, emoji:"🗒️" }
+];
+
+let selectedId = null;
+
+function renderSlots() {
+  const container = document.getElementById("slots");
+
+  container.innerHTML = products.map(item => `
+    <div class="slot" id="slot-${item.id}" onclick="selectItem(${item.id})">
+      <div class="slot-number">${item.id}</div>
+      <div class="emoji">${item.emoji}</div>
+      <div class="name">${item.name}</div>
+      <div class="price">RM ${item.price.toFixed(2)}</div>
+    </div>
+  `).join("");
+}
+
+function selectItem(id) {
+  selectedId = id;
+
+  document.querySelectorAll(".slot").forEach(slot => {
+    slot.classList.remove("selected");
+  });
+
+  document.getElementById(`slot-${id}`).classList.add("selected");
+
+  const item = products.find(product => product.id === id);
+
+  document.getElementById("selectedText").textContent =
+    `${item.name} — RM ${item.price.toFixed(2)}`;
+
+  const payButton = document.getElementById("payButton");
+  payButton.disabled = false;
+  payButton.classList.add("active");
+  payButton.textContent = `PAY RM ${item.price.toFixed(2)}`;
+
+  document.getElementById("status").textContent =
+    `Slot ${item.id} selected. Press PAY to continue.`;
+}
+
+function openPayment() {
+  if (!selectedId) return;
+
+  const item = products.find(product => product.id === selectedId);
+
+  document.getElementById("paymentItem").textContent =
+    `${item.name} — RM ${item.price.toFixed(2)}`;
+
+  generateQR();
+
+  document.getElementById("paymentModal").classList.add("show");
+}
+
+function closePayment() {
+  document.getElementById("paymentModal").classList.remove("show");
+}
+
+function confirmPayment() {
+  closePayment();
+
+  const item = products.find(product => product.id === selectedId);
+
+  document.getElementById("status").textContent =
+    "Payment confirmed. Opening lid...";
+
+  setTimeout(() => {
+    document.getElementById("lid").classList.add("open");
+    document.getElementById("retrieveText").textContent =
+      `Retrieve item from Slot ${item.id}: ${item.name}`;
+
+    document.getElementById("status").textContent =
+      "Lid opened. Please retrieve your item.";
+  }, 600);
+}
+
+function generateQR() {
+  const qr = document.getElementById("qr");
+  qr.innerHTML = "";
+
+  for (let i = 0; i < 441; i++) {
+    const square = document.createElement("span");
+
+    const x = i % 21;
+    const y = Math.floor(i / 21);
+
+    if ((x * y + x + y * 3) % 5 < 2) {
+      square.className = "on";
+    }
+
+    qr.appendChild(square);
+  }
+}
+
+renderSlots();
+</script>
+</body>
+</html>
